@@ -296,6 +296,11 @@ function FreeBody:getCenterOfMass()
 	return v3(self._cx, self._cy, self._cz)
 end
 
+function FreeBody:getCenterOfMassWorld()
+	local ox, oy, oz = transformVecByQuat(self._Rw, self._Rx, self._Ry, self._Rz, self._cx, self._cy, self._cz)
+	return v3(self._Px + ox, self._Py + oy, self._Pz + oz)
+end
+
 function FreeBody:getPosition()
 	return v3(self._Px, self._Py, self._Pz)
 end
@@ -327,6 +332,10 @@ end
 
 function FreeBody:getCFrame()
 	return cf(self._Px, self._Py, self._Pz, self._Rx, self._Ry, self._Rz, self._Rw)
+end
+
+function FreeBody:getOrientation()
+	return cf(0, 0, 0, self._Rw, self._Rx, self._Ry, self._Rz)
 end
 
 function FreeBody:getMass()
