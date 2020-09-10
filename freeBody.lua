@@ -56,6 +56,9 @@
 		returns the moment of inertia's unique components
 --]]
 
+local v3 = Vector3.new
+local cf = CFrame.new
+
 local function mulQuatQuat(
 	Aw, Ax, Ay, Az,
 	Bw, Bx, By, Bz
@@ -122,7 +125,7 @@ local function getRotationDerivative(
 		Tzx, Tyz, Tzz,
 		lx, ly, lz
 	)
-
+	
 	return mulQuatQuat(Rw, Rx, Ry, Rz, 0, wx/2, wy/2, wz/2)
 end
 
@@ -139,7 +142,7 @@ local function localTransform(
 		Tzx, Tyz, Tzz,
 		lx, ly, lz
 	)
-
+	
 	return transformVecByQuat(Rw, Rx, Ry, Rz, wx, wy, wz)
 end
 
@@ -187,15 +190,6 @@ local function parallelepipedMoment(
 		mass
 end
 
-
-
-
-
-
-
-
-
-
 local FreeBody = {}
 FreeBody.__index = FreeBody
 
@@ -206,22 +200,20 @@ do
 	base._px, base._py, base._pz = 0, 0, 0--momentum
 	base._Px, base._Py, base._Pz = 0, 0, 0--position
 	base._cx, base._cy, base._cz = 0, 0, 0--center of mass
-
+	
 	base._Rw, base._Rx, base._Ry, base._Rz = 1, 0, 0, 0--rotation
-
+	
 	--base._Tx, base._Ty, base._Tz = 0, 0, 0--torque
 	base._Lx, base._Ly, base._Lz = 0, 0, 0--angular momentum
-
+	
 	base._mass = 1
-
+	
 	base._Ixx, base._Iyy, base._Izz = 1, 1, 1
 	base._Ixy, base._Iyz, base._Izx = 0, 0, 0--moment of inertia
-
+	
 	base._Txx, base._Tyy, base._Tzz = 1, 1, 1
 	base._Txy, base._Tyz, base._Tzx = 0, 0, 0--inverse moment of inertia
 end
-
-
 
 function FreeBody.new()
 	return setmetatable({}, FreeBody)
@@ -229,22 +221,22 @@ end
 
 function FreeBody:setShape(u, v, w, density)
 	local
-		Ixx, Iyy, Izz,
-		Ixy, Iyz, Izx,
-		mass = parallelepipedMoment(
-			u.x, v.x, w.x,
-			u.y, v.y, w.y,
-			u.z, v.z, w.z,
-			density or 1
-		)
+	Ixx, Iyy, Izz,
+	Ixy, Iyz, Izx,
+	mass = parallelepipedMoment(
+		u.x, v.x, w.x,
+		u.y, v.y, w.y,
+		u.z, v.z, w.z,
+		density or 1
+	)
 	local
-		Txx, Txy, Tzx,
-		Txy, Tyy, Tyz,
-		Tzx, Tyz, Tzz = invMat(
-			Ixx, Ixy, Izx,
-			Ixy, Iyy, Iyz,
-			Izx, Iyz, Izz
-		)
+	Txx, Txy, Tzx,
+	Txy, Tyy, Tyz,
+	Tzx, Tyz, Tzz = invMat(
+		Ixx, Ixy, Izx,
+		Ixy, Iyy, Iyz,
+		Izx, Iyz, Izz
+	)
 	self._Ixx, self._Iyy, self._Izz = Ixx, Iyy, Izz
 	self._Ixy, self._Iyz, self._Izx = Ixy, Iyz, Izx
 	self._Txx, self._Tyy, self._Tzz = Txx, Tyy, Tzz
@@ -287,46 +279,43 @@ end
 
 local function CFtoQ(cf)
 	local a, t = cf:ToAxisAngle()
-	local c = math.cos(t/2)
-	local s = math.sin(t/2)
+	local c = cos(t/2)
+	local s = sin(t/2)
 	return
 		cf.x, cf.y, cf.z,
 		c, s*a.x, s*a.y, s*a.z
 end
 
 function FreeBody:setCFrame(cframe)
-	self._px, self._py, self._pz,
-		self._Rw, self._Rx, self._Ry, self._Rz = CFtoQ(cframe)
+	self._px, self._py, self._pz, self._Rw, self._Rx, self._Ry, self._Rz = CFtoQ(cframe)
 end
 
-
-
 function FreeBody:getCenterOfMass()
-	return Vector3.new(self._cx, self._cy, self._cz)
+	return v3(self._cx, self._cy, self._cz)
 end
 
 function FreeBody:getPosition()
-	return Vector3.new(self._Px, self._Py, self._Pz)
+	return v3(self._Px, self._Py, self._Pz)
 end
 
 function FreeBody:getVelocity()
-	return Vector3.new(self._px/self._mass, self._py/self._mass, self._pz/self._mass)
+	return v3(self._px/self._mass, self._py/self._mass, self._pz/self._mass)
 end
 
 function FreeBody:getGravity()
-	return Vector3.new(self._gx, self._gy, self._gz)
+	return v3(self._gx, self._gy, self._gz)
 end
 
 function FreeBody:getMomentum()
-	return Vector3.new(self._px, self._py, self._pz)
+	return v3(self._px, self._py, self._pz)
 end
 
 function FreeBody:getAngularMomentum()
-	return Vector3.new(self._Lx, self._Ly, self._Lz)
+	return v3(self._Lx, self._Ly, self._Lz)
 end
 
 function FreeBody:getAngularVelocity()
-	return Vector3.new(localTransform(
+	return v3(localTransform(
 		self._Txx, self._Tyy, self._Tzz,
 		self._Txy, self._Tyz, self._Tzx,
 		self._Rw, self._Rx, self._Ry, self._Rz,
@@ -335,7 +324,7 @@ function FreeBody:getAngularVelocity()
 end
 
 function FreeBody:getCFrame()
-	return CFrame.new(self._Px, self._Py, self._Pz, self._Rx, self._Ry, self._Rz, self._Rw)
+	return cf(self._Px, self._Py, self._Pz, self._Rx, self._Ry, self._Rz, self._Rw)
 end
 
 function FreeBody:getMass()
@@ -358,7 +347,7 @@ function FreeBody:getNextRotation(
 		Rw, Rx, Ry, Rz,
 		self._Lx, self._Ly, self._Lz
 	)
-
+	
 	return unitQuat(
 		Rw + dt*Dw,
 		Rx + dt*Dx,
@@ -373,16 +362,16 @@ function FreeBody:step(dt)
 	local w2, x2, y2, z2 = self:getNextRotation(w1, x1, y1, z1, -dt)
 	local Ew, Ex, Ey, Ez = sqrtQuat(mulQuatQuat(Rw, -Rx, -Ry, -Rz, w2, x2, y2, z2))
 	local Nw, Nx, Ny, Nz = mulQuatQuat(w1, x1, y1, z1, Ew, -Ex, -Ey, -Ez)--eksdee
-
+	
 	self._Rw, self._Rx, self._Ry, self._Rz = Nw, Nx, Ny, Nz
-
+	
 	local ax, ay, az = transformVecByQuat(Rw, Rx, Ry, Rz, self._cx, self._cy, self._cz)
 	local bx, by, bz = transformVecByQuat(Nw, Nx, Ny, Nz, self._cx, self._cy, self._cz)
-
+	
 	self._Px = self._Px + ax - bx + dt/self._mass*self._px + dt*dt/2*self._gx
 	self._Py = self._Py + ay - by + dt/self._mass*self._py + dt*dt/2*self._gy
 	self._Pz = self._Pz + az - bz + dt/self._mass*self._pz + dt*dt/2*self._gz
-
+	
 	self._px = self._px + dt*self._mass*self._gx
 	self._py = self._py + dt*self._mass*self._gy
 	self._pz = self._pz + dt*self._mass*self._gz
@@ -392,17 +381,21 @@ end
 --impulse impulse
 function FreeBody:impulse(i, I)
 	local Ix, Iy, Iz = I.x, I.y, I.z
-	local rx = i.x - self._Px
-	local ry = i.y - self._Py
-	local rz = i.z - self._Pz
+	
+	local cx, cy, cz = transformVecByQuat(self._Rw, self._Rx, self._Ry, self._Rz, self._cx, self._cy, self._cz)
+	
+	local rx = i.x - (self._Px + cx)
+	local ry = i.y - (self._Py + cy)
+	local rz = i.z - (self._Pz + cz)
+	
 	local Jx = ry*Iz - rz*Iy
 	local Jy = rz*Ix - rx*Iz
 	local Jz = rx*Iy - ry*Ix
-
+	
 	self._Lx = self._Lx + Jx
 	self._Ly = self._Ly + Jy
 	self._Lz = self._Lz + Jz
-
+	
 	self._px = self._px + Ix
 	self._py = self._py + Iy
 	self._pz = self._pz + Iz
@@ -411,14 +404,20 @@ end
 function FreeBody:impulseRelative(i, I)
 	local rx, ry, rz = transformVecByQuat(self._Rw, self._Rx, self._Ry, self._Rz, i.x, i.y, i.z)
 	local Ix, Iy, Iz = transformVecByQuat(self._Rw, self._Rx, self._Ry, self._Rz, I.x, I.y, I.z)
+	local cx, cy, cz = transformVecByQuat(self._Rw, self._Rx, self._Ry, self._Rz, self._cx, self._cy, self._cz)
+	
+	rx = rx - cx
+	ry = ry - cy
+	rz = rz - cz
+	
 	local Jx = ry*Iz - rz*Iy
 	local Jy = rz*Ix - rx*Iz
 	local Jz = rx*Iy - ry*Ix
-
+	
 	self._Lx = self._Lx + Jx
 	self._Ly = self._Ly + Jy
 	self._Lz = self._Lz + Jz
-
+	
 	self._px = self._px + Ix
 	self._py = self._py + Iy
 	self._pz = self._pz + Iz
