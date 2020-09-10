@@ -335,7 +335,7 @@ function FreeBody:getCFrame()
 end
 
 function FreeBody:getOrientation()
-	return cf(0, 0, 0, self._Rw, self._Rx, self._Ry, self._Rz)
+	return cf(0, 0, 0, self._Rx, self._Ry, self._Rz, self._Rw)
 end
 
 function FreeBody:getMass()
