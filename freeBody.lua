@@ -56,8 +56,10 @@
 		returns the moment of inertia's unique components
 --]]
 
-local v3 = Vector3.new
-local cf = CFrame.new
+local v3  = Vector3.new
+local cf  = CFrame.new
+local cos = math.cos
+local sin = math.sin
 
 local function mulQuatQuat(
 	Aw, Ax, Ay, Az,
