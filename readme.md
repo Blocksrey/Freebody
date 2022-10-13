@@ -1,5 +1,6 @@
 # freebody
 A class for simulating torque-free motion with high-precision
+
 ![](assets/intermediate.gif)
 
 ## Usage
